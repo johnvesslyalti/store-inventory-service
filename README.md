@@ -1,175 +1,186 @@
-Title:
+# 📦 Store Inventory Service
 
-    A real-time inventory aggregation backend that fetches product availabity from multiple brands (H&M, Uniqlo, etc.), normalizes their different data formats, calculates distance from the user, and returns unified results through a single API.
+A lightweight backend service + minimal UI that fetches **store-specific inventory** from multiple brands using the **Adapter Pattern**, normalizes the data, stores snapshots in memory, and exposes APIs to trigger and fetch snapshots.
 
-Architecture:
+---
 
-                    ┌────────────────────────────┐
-                    │        UI (HTML/JS)        │
-                    │ Brand + Store Picker       │
-                    │ "Fetch Now" Button         │
-                    └─────────────┬──────────────┘
-                                 POST /inventory/fetch
-                                │
-                                ▼
-                ┌────────────────────────────────────┐
-                │        InventoryService            │
-                │  - Calls Brand Adapters            │
-                │  - Normalizes Data                 │
-                │  - Stores Snapshots (in-memory)    │
-                └─────────────┬──────────────────────┘
-                                │
-                    ┌────────────┴─────────────────┐
-                    │       Brand Adapters         │
-                    │ (HnM, Uniqlo, Store3, …)     │
-                    │   fetchStoreInventory()      │
-                    └────────────┬─────────────────┘
-                                │
-                        Returns brand-specific raw data
-                                │
-                                ▼
-                ┌─────────────────────────────────────┐
-                │     SnapshotStore (in-memory)        │
-                │  { brand → storeId → lastSnapshot }  │
-                └─────────────────────────────────────┘
+## 🏗 Architecture Overview
 
+```
+                 ┌───────────────────────────┐
+                 │        UI (HTML/JS)        │
+                 │ Brand + Store Picker       │
+                 │ "Fetch Now" Button         │
+                 └─────────────┬─────────────┘
+                               │ POST /inventory/fetch
+                               ▼
+               ┌────────────────────────────────────┐
+               │        InventoryService            │
+               │  - Calls Brand Adapters            │
+               │  - Normalizes Data                 │
+               │  - Stores Snapshots (in-memory)    │
+               └─────────────┬──────────────────────┘
+                             │
+                ┌────────────┴─────────────────┐
+                │       Brand Adapters         │
+                │ (HnM, Uniqlo, Store3, …)     │
+                │   fetchStoreInventory()      │
+                └────────────┬─────────────────┘
+                             │
+                     Returns brand-specific raw data
+                             │
+                             ▼
+              ┌─────────────────────────────────────┐
+              │     SnapshotStore (in-memory)        │
+              │  { brand → storeId → lastSnapshot }  │
+              └─────────────────────────────────────┘
 
-This project includes:
+```
 
-    - Brand Adapters (plug and play architecture)
-    - Parallel fetching
-    - Snapshot persistence (in-memory)
-    - Minimal UI (HTML + JS)
-    - Fast API (<300ms target)
+Each brand has its own raw response format → adapters convert them to a unified shape.
 
-Features:
+---
 
-    1. Brand Adapter Architecture
-        Each Brand has:
-            - A seperate adapter class
-            - Its own fetch + normalize logic
-            - implements a common interface
-        This makes it easy to add new branch later (Zara, Puma, etc.) without touching existing code.
+## 🚀 Features
 
-    2. Real-Time Inventory Fetching
-        Fetches data from 3 simulated branch API's in parallel using Promise.all
+* Adapter Pattern for H&M, Uniqlo, Store3
+* Store-specific inventory
+* Snapshot caching
+* Minimal UI with:
 
-    3. Data Normalization
-        - Different stores return difference JSON structures.
-        - All responses are transformed into a unified model:
+  * Brand dropdown
+  * Store dropdown
+  * Fetch button
+  * “From Cache” indicator
+  * Last refreshed time
+  * Seconds-ago refresh timer
+* Zero external DB required
 
-            {
-                "storeId": "store1",
-                "storeName": "H&M",
-                "productId": "ABC123",
-                "availableQty": 10,
-                "price": 1999,
-                "lastUpdated": "ISO timestamp",
-                "distanceKm": 2.3
-            }
+---
 
-    4. Distance Calculation
-        - Uses the Haversine formula to compute distance between:
-            user's location -> store location
-    
-    5. Snapshot Persistence
-        - Every time data is fetched, a snapshot is stored in-memory.
-        - This helps with caching and debugging
+## 🛠 How to Run
 
-    6. Minimal UI
-        - A supe-light HTML page that:
-            - Accepts product_id, lat, lng
-            - Calls /inventory
-            - Renders the results inside a table
-        
-    7. Clean Project Structure
-        src/
-        adapters/
-        services/
-        routes/
-        types/
-        utils/
-        ui/
+```bash
+git clone <repo-url>
+cd store-inventory-service
+npm install
+npm run dev
+```
 
-Tech Stack:
+Server runs at:
 
-    **Layer**   **Technology**
+```
+http://localhost:3000
+```
 
-    Runtime     Node.js
-    Language    TypeScript
-    Framework   Express.js
-    Data Simulation Brand Adapters
-    Caching     In-memory snapshot store
-    UI          HTML + JavaScript
-    Test        Jest
-    Packaging   npm
+UI:
 
-Project Structure:
+```
+open src/ui/index.html in browser
+```
 
-    src/
-    ├── adapters/
-    │   ├── BrandAdapter.ts
-    │   ├── HnMAdapter.ts
-    │   ├── UniqloAdapter.ts
-    │   └── Store3Adapter.ts
-    │
-    ├── services/
-    │   └── InventoryService.ts
-    │
-    ├── utils/
-    │   └── distance.ts
-    │
-    ├── routes/
-    │   └── inventory.route.ts
-    │
-    ├── ui/
-    │   ├── index.html
-    │   ├── script.js
-    │   └── styles.css
-    │
-    ├── snapshots/
-    │   └── SnapshotStore.ts
-    │
-    ├── app.ts
-    └── server.ts
+---
 
-API Endpoints:
+## 📡 API Endpoints
 
-    GET /inventory
-    - Query Params
-        product_id=ABC123
-        lat=12.9716
-        lng=77.5946
-    Returns
-        
-        {
-        "productId": "ABC123",
-        "count": 3,
-        "results": [
-            {
-            "storeId": "store1",
-            "storeName": "H&M",
-            "availableQty": 5,
-            "price": 1499,
-            "lastUpdated": "2024-05-21T10:12:00.234Z",
-            "distanceKm": 1.8
-            }
-        ]
-        }
+### 1) **POST /inventory/fetch**
 
-Performance
+Triggers an on-demand refresh for a brand + store.
 
-    - Uses parallel requests
-    - In-memory snapshots for repeated queries
-    - Lightweight normalization
-    - Minimal UI client for testing
-    - Target: ~300ms response time for 3 stores.
+#### Request
 
-Minimal UI
+```json
+{
+  "brand": "HnM",
+  "storeId": "hnm-001",
+  "force": false
+}
+```
 
-    - A simple HTML page (no frameworks) that - allows the user to:
-    - enter product ID
-    - enter lat/lng
-    - trigger API request
-    - display results
-    - This proves the backend works end-to-end.
+#### Response
+
+```json
+{
+  "snapshot": {
+    "brand": "HnM",
+    "storeId": "hnm-001",
+    "items": [
+      { "sku": "HNM-TS-001", "name": "Cotton Tee", "size": "M", "qty": 7 },
+      { "sku": "HNM-JN-002", "name": "Slim Jeans", "size": "L", "qty": 3 }
+    ],
+    "lastRefreshedAt": "2025-01-24T10:25:32.120Z"
+  },
+  "fromCache": false
+}
+```
+
+---
+
+### 2) **GET /inventory?brand=&storeId=**
+
+Returns the **latest snapshot** saved for that brand/store.
+
+#### Example Request
+
+```
+GET /inventory?brand=Uniqlo&storeId=uniqlo-001
+```
+
+#### Example Response
+
+```json
+{
+  "brand": "Uniqlo",
+  "storeId": "uniqlo-001",
+  "items": [
+    { "sku": "UQ-AIR-001", "name": "Airism Tee", "size": "M", "qty": 5 },
+    { "sku": "UQ-STRETCH-002", "name": "Ultra Stretch Jeans", "size": "32", "qty": 8 }
+  ],
+  "lastRefreshedAt": "2025-01-24T10:26:55.982Z"
+}
+```
+
+---
+
+## 🧩 Normalized Item Format
+
+All brand adapters normalize inventory to this unified shape:
+
+```ts
+{
+  sku: string;
+  name: string;
+  size: string;
+  qty: number;
+}
+```
+
+---
+
+## 🎨 Minimal UI Preview
+
+The UI lets you:
+
+* Choose **Brand**
+* Choose **Store**
+* Click **Fetch Now**
+* See:
+
+  * From Cache: YES/NO
+  * Last Refreshed At
+  * Refreshed: X seconds ago
+* View table of SKUs
+
+---
+
+## 📌 Folder Structure
+
+```
+src/
+  adapters/
+  data/
+  routes/
+  services/
+  snapshots/
+  types/
+  ui/
