@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Inventory UI</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+
+        h2 {
+            margin-bottom: 20px;
+        }
+
+        select,
+        button {
+            padding: 6px 10px;
+            font-size: 14px;
+            margin-right: 10px;
+        }
+
+        table {
+            margin-top: 20px;
+            border-collapse: collapse;
+            min-width: 400px;
+        }
+
+        th,
+        td {
+            border: 1px solid #555;
+            padding: 6px 10px;
+            text-align: left;
+        }
+
+        #cacheInfo {
+            margin-top: 15px;
+            font-weight: bold;
+            font-size: 16px;
+        }
+    </style>
+</head>
+
+<body>
+    <h2>Store Inventory</h2>
+
+    <label>Brand</label>
+    <select id="brand" onchange="updateStores()">
+        <option value="HnM">H&M</option>
+        <option value="Uniqlo">Uniqlo</option>
+        <option value="Store3">Store3</option>
+    </select>
+
+    <label>Store</label>
+    <select id="store"></select>
+
+    <button onclick="fetchNow()">Fetch Now</button>
+
+    <p id="cacheInfo" style="font-weight: bold;"></p>
+    <p id="lastRefreshed" style="font-weight: bold;"></p>
+    <p id="timeAgo" style="color: gray;"></p>
+
+    <table>
+        <thead>
+            <tr>
+                <th>SKU</th>
+                <th>Name</th>
+                <th>Size</th>
+                <th>Qty</th>
+            </tr>
+        </thead>
+
+        <tbody id="body"></tbody>
+    </table>
+
+    <script src="script.js"></script>
+</body>
+
+</html>

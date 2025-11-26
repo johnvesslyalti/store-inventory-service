@@ -1,0 +1,24 @@
+{
+  "compilerOptions": {
+    "rootDir": "./src",
+    "outDir": "./dist",
+    "module": "commonjs",
+    "target": "ES2020",
+    "resolveJsonModule": true,
+    "lib": [
+      "ES2020"
+    ],
+    "types": [
+      "node"
+    ],
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "sourceMap": true,
+    "declaration": true,
+    "moduleDetection": "force",
+    "isolatedModules": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true
+  }
+}
