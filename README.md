@@ -2,6 +2,38 @@ Title:
 
     A real-time inventory aggregation backend that fetches product availabity from multiple brands (H&M, Uniqlo, etc.), normalizes their different data formats, calculates distance from the user, and returns unified results through a single API.
 
+Architecture:
+
+                    ┌────────────────────────────┐
+                    │        UI (HTML/JS)        │
+                    │ Brand + Store Picker       │
+                    │ "Fetch Now" Button         │
+                    └─────────────┬──────────────┘
+                                 POST /inventory/fetch
+                                │
+                                ▼
+                ┌────────────────────────────────────┐
+                │        InventoryService            │
+                │  - Calls Brand Adapters            │
+                │  - Normalizes Data                 │
+                │  - Stores Snapshots (in-memory)    │
+                └─────────────┬──────────────────────┘
+                                │
+                    ┌────────────┴─────────────────┐
+                    │       Brand Adapters         │
+                    │ (HnM, Uniqlo, Store3, …)     │
+                    │   fetchStoreInventory()      │
+                    └────────────┬─────────────────┘
+                                │
+                        Returns brand-specific raw data
+                                │
+                                ▼
+                ┌─────────────────────────────────────┐
+                │     SnapshotStore (in-memory)        │
+                │  { brand → storeId → lastSnapshot }  │
+                └─────────────────────────────────────┘
+
+
 This project includes:
 
     - Brand Adapters (plug and play architecture)
